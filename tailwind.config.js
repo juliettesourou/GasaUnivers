@@ -8,45 +8,45 @@ module.exports = {
     extend: {
       colors: {
         border: "hsl(0, 0%, 90%)",
-        input: "hsl(0, 0%, 90%)",
-        ring: "hsl(340, 60%, 22%)",
+        input: "hsl(0, 0%, 95%)",
+        ring: "hsl(217, 90%, 54%)",
         background: "hsl(0, 0%, 100%)",
-        foreground: "hsl(210, 10%, 20%)",
+        foreground: "hsl(213, 12%, 18%)",
         primary: {
-          DEFAULT: "hsl(340, 60%, 22%)",
+          DEFAULT: "hsl(217, 90%, 54%)", // bleu principal
           foreground: "hsl(0, 0%, 100%)",
         },
         secondary: {
-          DEFAULT: "hsl(340, 55%, 32%)",
+          DEFAULT: "hsl(217, 80%, 46%)", // bleu secondaire
           foreground: "hsl(0, 0%, 100%)",
         },
         tertiary: {
-          DEFAULT: "hsl(20, 15%, 94%)",
-          foreground: "hsl(340, 20%, 20%)",
+          DEFAULT: "hsl(210, 16%, 96%)", // gris très clair pour backgrounds
+          foreground: "hsl(213, 12%, 18%)",
         },
         neutral: {
           DEFAULT: "hsl(0, 0%, 100%)",
-          foreground: "hsl(210, 10%, 20%)",
+          foreground: "hsl(213, 12%, 18%)",
         },
         destructive: {
           DEFAULT: "hsl(0, 84%, 60%)",
           foreground: "hsl(0, 0%, 100%)",
         },
         muted: {
-          DEFAULT: "hsl(0, 0%, 95%)",
-          foreground: "hsl(0, 0%, 40%)",
+          DEFAULT: "hsl(210, 16%, 96%)",
+          foreground: "hsl(215, 14%, 34%)",
         },
         accent: {
-          DEFAULT: "hsl(340, 55%, 32%)",
+          DEFAULT: "hsl(217, 80%, 46%)",
           foreground: "hsl(0, 0%, 100%)",
         },
         popover: {
           DEFAULT: "hsl(0, 0%, 100%)",
-          foreground: "hsl(210, 10%, 20%)",
+          foreground: "hsl(213, 12%, 18%)",
         },
         card: {
           DEFAULT: "hsl(0, 0%, 100%)",
-          foreground: "hsl(210, 10%, 20%)",
+          foreground: "hsl(213, 12%, 18%)",
         },
         success: "hsl(140, 40%, 35%)",
         warning: "hsl(40, 80%, 40%)",
@@ -84,9 +84,9 @@ module.exports = {
         '64': '16rem',
       },
       backgroundImage: {
-        'gradient-1': 'linear-gradient(180deg, hsl(340, 60%, 22%) 0%, hsl(26, 22%, 96%) 80%)',
-        'gradient-2': 'linear-gradient(90deg, hsl(340, 60%, 22%) 10%, hsl(20, 15%, 94%) 90%)',
-        'button-border-gradient': 'linear-gradient(90deg, hsla(340, 60%, 40%, 1), hsla(340, 60%, 30%, 1))',
+        'gradient-1': 'linear-gradient(180deg, hsl(217, 90%, 54%) 0%, hsl(210, 16%, 96%) 80%)',
+        'gradient-2': 'linear-gradient(90deg, hsl(217, 80%, 46%) 10%, hsl(210, 16%, 96%) 90%)',
+        'button-border-gradient': 'linear-gradient(90deg, hsla(217, 90%, 60%, 1), hsla(217, 80%, 46%, 1))',
       },
     },
   },

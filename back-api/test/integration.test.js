@@ -76,4 +76,34 @@ describe('Auth and Promotions API', () => {
     expect(Array.isArray(listRes.body)).toBe(true);
     expect(listRes.body.length).toBeGreaterThanOrEqual(1);
   });
+
+  test('admin creates formateur → formateur can login', async () => {
+    // ensure admin token exists (if not from previous test, create/login admin)
+    if (!token) {
+      await request(app).post('/api/auth/register').send({ name: 'Admin', email: 'admin@example.com', password: 'Admin123!', role: 'directeur' }).expect(201);
+      const loginRes = await request(app).post('/api/auth/login').send({ email: 'admin@example.com', password: 'Admin123!' }).expect(200);
+      token = loginRes.body.token;
+    }
+
+    const formateurEmail = 'trainer@example.com';
+    const formateurPwd = 'Trainer123!';
+
+    // create formateur via admin endpoint
+    const createRes = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Trainer User', email: formateurEmail, password: formateurPwd, role: 'formateur' })
+      .expect(201);
+
+    expect(createRes.body).toMatchObject({ email: formateurEmail.toLowerCase(), role: 'formateur' });
+
+    // login with formateur credentials
+    const fLoginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: formateurEmail, password: formateurPwd })
+      .expect(200);
+
+    expect(fLoginRes.body).toHaveProperty('token');
+    expect(fLoginRes.body.user).toMatchObject({ role: 'formateur' });
+  });
 });

@@ -45,6 +45,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, pro
   const [password, setPassword] = useState('');
   const [generatedPwd, setGeneratedPwd] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [createdOnServer, setCreatedOnServer] = useState<boolean | null>(null);
 
   const loadUser = async (id: string) => {
     try {
@@ -112,8 +113,10 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, pro
         // try backend first (admin endpoint), fallback to local DB
         try {
           await apiCreateUser({ name: newUser.name, email: newUser.email, password: newUser.password, role: newUser.role, phone: newUser.phone, promotion: newUser.promotion });
+          setCreatedOnServer(true);
         } catch (err) {
           await addUser(newUser);
+          setCreatedOnServer(false);
         }
         try {
           const saved = {
@@ -218,6 +221,12 @@ export const StudentModal: React.FC<StudentModalProps> = ({ isOpen, onClose, pro
               <p className="font-medium">{role === 'etudiant' ? 'Étudiant créé' : 'Formateur créé'}</p>
               <p className="text-sm mt-2">Email: <span className="font-medium">{email}</span></p>
               <p className="text-sm">Mot de passe: <span className="font-medium">{generatedPwd || password}</span></p>
+              {createdOnServer === false && (
+                <p className="text-sm mt-2 text-destructive">Compte créé localement (hors serveur). Pour que l'utilisateur se connecte au serveur, créez-le en étant connecté (token requis).</p>
+              )}
+              {createdOnServer === true && (
+                <p className="text-sm mt-2 text-green-600">Compte créé sur le serveur. L'utilisateur peut se connecter avec ces identifiants.</p>
+              )}
               {role === 'etudiant' && (
                 <p className="text-sm">Promotion: <span className="font-medium">{promotionLabel || promotionId}</span></p>
               )}

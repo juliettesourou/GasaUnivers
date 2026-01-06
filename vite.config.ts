@@ -21,7 +21,8 @@ export default defineConfig({
   server: {
     host: "localhost",
     port: 5173,
-    strictPort: true,
+    // Autoriser Vite à choisir le prochain port libre si 5173 est occupé
+    strictPort: false,
   },
   css: {
     postcss: {

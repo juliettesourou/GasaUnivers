@@ -57,6 +57,12 @@ echo 'VITE_API_BASE=http://localhost:5000' > .env.local
 ```bash
 npm run dev
 # Front disponible sur http://127.0.0.1:5173
+
+# Si le port 5173 est déjà utilisé:
+npm run dev -- --port 5174
+# ou
+npm run dev:5174
+# Front disponible sur http://127.0.0.1:5174
 ```
 
 Identifiants de test:
@@ -74,7 +80,7 @@ db.promotions.find().pretty()
 
 ## Dépannage
 - Page blanche via proxy/Apache: ouvrez `http://127.0.0.1:5173` (pas `localhost`), ou ajoutez une exception dans votre proxy pour les adresses locales.
-- Conflits de ports Vite (5173): arrêter les instances existantes (ex: `fuser -k 5173/tcp`) et relancer.
+- Conflits de ports Vite (5173): arrêter les instances existantes (ex: `lsof -i :5173` puis `kill -9 <PID>`) et relancer, ou démarrer sur un autre port (`npm run dev -- --port 5174`).
 - Authorization: les requêtes protégées doivent inclure `Authorization: Bearer <token>`.
 
 ## Scripts utiles
@@ -87,6 +93,17 @@ db.promotions.find().pretty()
   - `npm run db:schema` – applique schémas et index MongoDB
   - `npm test` – lance les tests d’intégration
 
-## Notes
+## Noteshttps://prod.liveshare.vsengsaas.visualstudio.com/join?5BA8D188F1593A8F5254CFD169B8B92CA9E0%
 - Le front utilise `import.meta.env.VITE_API_BASE` pour l’adresse de l’API.
 - L’API nécessite MongoDB en local et un `JWT_SECRET` défini dans `.env`.
+
+
+npm run dev -- --port 5174
+
+juliettesounouvou@MacBook-Air-de-Juliette novo % cd /Users/juliettesounouvou/novo/back-api && npm run dev
+ mongosh
+
+ cd /Users/juliettesounouvou/novo/back-api
+ npm install
+ npm run dev
+ 

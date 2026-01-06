@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Users, BookOpen, Plus } from 'lucide-react';
 import { getAllPromotions, getAllUsers } from '@/lib/db';
 import { getPromotions as apiGetPromotions, getStudentsByPromotion as apiGetStudentsByPromotion } from '@/lib/api';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import type { Promotion } from '@/lib/db';
 import PromotionModal from '@/components/modals/PromotionModal';
 import StudentModal from '@/components/modals/StudentModal';
@@ -19,7 +19,7 @@ export const Promotions: React.FC = () => {
   const [selectedPromotion, setSelectedPromotion] = useState<{ id: string; label?: string } | null>(null);
   const [isCredentialsOpen, setIsCredentialsOpen] = useState(false);
   const [hasRecentCredentials, setHasRecentCredentials] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const loadPromotions = async () => {
     try {
@@ -30,9 +30,9 @@ export const Promotions: React.FC = () => {
         const enriched = await Promise.all(promos.map(async (p: any) => {
           try {
             const students = await apiGetStudentsByPromotion(p._id || p.id);
-            return { id: p._id || p.id, label: p.label, year: p.year, students: (students || []).length, spaces: p.spaces || 0 };
+            return { id: p._id || p.id, label: p.label, academicYear: String(p.academicYear ?? p.year ?? ''), students: (students || []).length, spaces: p.spaces || 0 };
           } catch (e) {
-            return { id: p._id || p.id, label: p.label, year: p.year, students: p.students ?? 0, spaces: p.spaces || 0 };
+            return { id: p._id || p.id, label: p.label, academicYear: String(p.academicYear ?? p.year ?? ''), students: p.students ?? 0, spaces: p.spaces || 0 };
           }
         }));
         setPromotions(enriched as any);
@@ -45,7 +45,7 @@ export const Promotions: React.FC = () => {
           }
           return acc;
         }, {});
-        const enriched = all.map((p) => ({ ...p, students: counts[p.id] ?? p.students ?? 0 }));
+  const enriched = all.map((p) => ({ ...p, students: counts[p.id] ?? p.students ?? 0 }));
         setPromotions(enriched);
       }
     } catch (error) {
@@ -83,7 +83,7 @@ export const Promotions: React.FC = () => {
                 <div className="flex items-baseline justify-between w-full">
                   <div className="flex items-baseline gap-3">
                     <CardTitle className="text-2xl font-heading text-foreground">{promo.label || `Promotion`}</CardTitle>
-                    <span className="text-sm text-gray-500">{promo.year}</span>
+                    <span className="text-sm text-gray-500">{promo.academicYear}</span>
                   </div>
                 </div>
               </CardHeader>

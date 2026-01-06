@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    ports:
+      - "27017:27017"  # optionnel, pour accès local
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./back-api
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/gasaunivers
+      - PORT=5000
+      - JWT_SECRET=change_this_secret
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    ports:
+      - "5000:5000"  # optionnel, utile pour debug direct
+
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_API_BASE: ""  # Utiliser l'origine (Nginx) + proxy /api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+
+volumes:
+  mongo-data:

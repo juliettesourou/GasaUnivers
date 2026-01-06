@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { addPromotion } from '@/lib/db';
+import { createPromotion as apiCreatePromotion } from '@/lib/api';
 
 interface PromotionModalProps {
   isOpen: boolean;
@@ -21,29 +22,40 @@ interface PromotionModalProps {
 
 export const PromotionModal: React.FC<PromotionModalProps> = ({ isOpen, onClose }) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({ label: '', year: '' });
+  const [formData, setFormData] = useState({ label: '', academicYear: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const yearNum = Number(formData.year);
-      if (!Number.isInteger(yearNum) || yearNum < 2000 || yearNum > 2100) {
-        toast({ title: 'Erreur', description: "Saisissez une année valide (2000-2100).", variant: 'destructive' });
+      // Valider format académique: YYYY-YYYY
+      const match = formData.academicYear.match(/^\d{4}-\d{4}$/);
+      if (!match) {
+        toast({ title: 'Erreur', description: "Format d'année académique invalide (ex: 2022-2023).", variant: 'destructive' });
+        return;
+      }
+      const [startY, endY] = formData.academicYear.split('-').map((s) => Number(s));
+      if (!(endY === startY + 1)) {
+        toast({ title: 'Erreur', description: "L'année de fin doit être exactement l'année de début + 1.", variant: 'destructive' });
         return;
       }
 
-      const newPromo = {
-        id: uuidv4(),
-        year: String(yearNum),
-        label: formData.label || undefined,
-        students: 0,
-        spaces: 0,
-      };
-
-      await addPromotion(newPromo);
+      // Tente la création côté backend d'abord
+      try {
+        await apiCreatePromotion({ label: formData.label, academicYear: formData.academicYear } as any);
+      } catch (serverErr) {
+        // Fallback local IndexedDB
+        const newPromo = {
+          id: uuidv4(),
+          academicYear: formData.academicYear,
+          label: formData.label || undefined,
+          students: 0,
+          spaces: 0,
+        };
+        await addPromotion(newPromo);
+      }
 
       toast({ title: 'Promotion créée', description: "La promotion a été ajoutée." });
-      setFormData({ label: '', year: '' });
+      setFormData({ label: '', academicYear: '' });
       onClose();
     } catch (error) {
       console.error('Failed to create promotion:', error);
@@ -67,8 +79,8 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ isOpen, onClose 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="year">Année</Label>
-              <Input id="year" type="number" min={2000} max={2100} value={formData.year} onChange={(e) => setFormData({ ...formData, year: e.target.value })} placeholder="2026" required />
+              <Label htmlFor="academicYear">Année académique</Label>
+              <Input id="academicYear" value={formData.academicYear} onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })} placeholder="2022-2023" required />
             </div>
           </div>
 

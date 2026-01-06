@@ -15,18 +15,19 @@ export interface User {
 
 export interface Promotion {
   id: string;
-  year: string;
+  academicYear: string;
   students: number;
   spaces: number;
   label?: string;
 }
 
-interface PedagogicalSpace {
+export interface PedagogicalSpace {
   id: string;
   name: string;
   formateur: string;
   formateurId: string;
   promotion: string;
+  studentId?: string;
   students: number;
   description?: string;
   createdOn: string;
@@ -48,7 +49,7 @@ interface UniversityCasaDB extends DBSchema {
   promotions: {
     key: string;
     value: Promotion;
-    indexes: { 'by-year': string };
+    indexes: { 'by-academicYear': string };
   };
   pedagogicalSpaces: {
     key: string;
@@ -63,7 +64,8 @@ interface UniversityCasaDB extends DBSchema {
 }
 
 const DB_NAME = 'universite-casa-db';
-const DB_VERSION = 1;
+// Incrémentez la version quand vous ajoutez de nouveaux object stores ou index
+const DB_VERSION = 3;
 
 let dbInstance: IDBPDatabase<UniversityCasaDB> | null = null;
 
@@ -84,7 +86,16 @@ export async function initDB(): Promise<IDBPDatabase<UniversityCasaDB>> {
       // Promotions store
       if (!db.objectStoreNames.contains('promotions')) {
         const promoStore = db.createObjectStore('promotions', { keyPath: 'id' });
-        promoStore.createIndex('by-year', 'year');
+        promoStore.createIndex('by-academicYear', 'academicYear');
+      } else {
+        // migration d'index: si l'ancien index existe, créer le nouveau si nécessaire
+        try {
+          const promoStore = db.transaction('promotions', 'versionchange').store;
+          // @ts-ignore - index may not exist
+          if (!promoStore.indexNames?.contains?.('by-academicYear')) {
+            promoStore.createIndex('by-academicYear', 'academicYear');
+          }
+        } catch {}
       }
 
       // Pedagogical spaces store
@@ -153,11 +164,11 @@ export async function seedDatabase(): Promise<void> {
   const existingPromos = await promoStore.getAll();
   if (existingPromos.length === 0) {
     const demoPromos: Promotion[] = [
-      { id: crypto.randomUUID(), year: '2020', students: 180, spaces: 15 },
-      { id: crypto.randomUUID(), year: '2021', students: 210, spaces: 16 },
-      { id: crypto.randomUUID(), year: '2022', students: 195, spaces: 14 },
-      { id: crypto.randomUUID(), year: '2023', students: 225, spaces: 18 },
-      { id: crypto.randomUUID(), year: '2024', students: 246, spaces: 20 },
+      { id: crypto.randomUUID(), academicYear: '2019-2020', students: 180, spaces: 15 },
+      { id: crypto.randomUUID(), academicYear: '2020-2021', students: 210, spaces: 16 },
+      { id: crypto.randomUUID(), academicYear: '2021-2022', students: 195, spaces: 14 },
+      { id: crypto.randomUUID(), academicYear: '2022-2023', students: 225, spaces: 18 },
+      { id: crypto.randomUUID(), academicYear: '2023-2024', students: 246, spaces: 20 },
     ];
     for (const p of demoPromos) {
       await promoStore.add(p);
@@ -212,6 +223,28 @@ export async function getAllPromotions(): Promise<Promotion[]> {
 export async function addPromotion(promo: Promotion): Promise<void> {
   const db = await initDB();
   await db.add('promotions', promo);
+}
+
+export async function getAllPedagogicalSpaces(): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  return db.getAll('pedagogicalSpaces');
+}
+
+export async function addPedagogicalSpace(space: PedagogicalSpace): Promise<void> {
+  const db = await initDB();
+  await db.add('pedagogicalSpaces', space);
+}
+
+export async function getSpacesByPromotion(promotionId: string): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  const idx = db.transaction('pedagogicalSpaces').store.index('by-promotion');
+  return idx.getAll(promotionId);
+}
+
+export async function getSpacesByFormateur(formateurId: string): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  const idx = db.transaction('pedagogicalSpaces').store.index('by-formateur');
+  return idx.getAll(formateurId);
 }
 
 /** Retourne tous les étudiants inscrits pour une promotion donnée */
