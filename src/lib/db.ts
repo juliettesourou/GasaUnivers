@@ -21,12 +21,13 @@ export interface Promotion {
   label?: string;
 }
 
-interface PedagogicalSpace {
+export interface PedagogicalSpace {
   id: string;
   name: string;
   formateur: string;
   formateurId: string;
   promotion: string;
+  studentId?: string;
   students: number;
   description?: string;
   createdOn: string;
@@ -63,7 +64,8 @@ interface UniversityCasaDB extends DBSchema {
 }
 
 const DB_NAME = 'universite-casa-db';
-const DB_VERSION = 1;
+// Incrémentez la version quand vous ajoutez de nouveaux object stores ou index
+const DB_VERSION = 2;
 
 let dbInstance: IDBPDatabase<UniversityCasaDB> | null = null;
 
@@ -212,6 +214,28 @@ export async function getAllPromotions(): Promise<Promotion[]> {
 export async function addPromotion(promo: Promotion): Promise<void> {
   const db = await initDB();
   await db.add('promotions', promo);
+}
+
+export async function getAllPedagogicalSpaces(): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  return db.getAll('pedagogicalSpaces');
+}
+
+export async function addPedagogicalSpace(space: PedagogicalSpace): Promise<void> {
+  const db = await initDB();
+  await db.add('pedagogicalSpaces', space);
+}
+
+export async function getSpacesByPromotion(promotionId: string): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  const idx = db.transaction('pedagogicalSpaces').store.index('by-promotion');
+  return idx.getAll(promotionId);
+}
+
+export async function getSpacesByFormateur(formateurId: string): Promise<PedagogicalSpace[]> {
+  const db = await initDB();
+  const idx = db.transaction('pedagogicalSpaces').store.index('by-formateur');
+  return idx.getAll(formateurId);
 }
 
 /** Retourne tous les étudiants inscrits pour une promotion donnée */

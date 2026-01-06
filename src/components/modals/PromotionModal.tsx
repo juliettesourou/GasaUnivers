@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { addPromotion } from '@/lib/db';
+import { createPromotion as apiCreatePromotion } from '@/lib/api';
 
 interface PromotionModalProps {
   isOpen: boolean;
@@ -32,15 +33,20 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({ isOpen, onClose 
         return;
       }
 
-      const newPromo = {
-        id: uuidv4(),
-        year: String(yearNum),
-        label: formData.label || undefined,
-        students: 0,
-        spaces: 0,
-      };
-
-      await addPromotion(newPromo);
+      // Tente la création côté backend d'abord
+      try {
+        await apiCreatePromotion({ label: formData.label, year: yearNum });
+      } catch (serverErr) {
+        // Fallback local IndexedDB
+        const newPromo = {
+          id: uuidv4(),
+          year: String(yearNum),
+          label: formData.label || undefined,
+          students: 0,
+          spaces: 0,
+        };
+        await addPromotion(newPromo);
+      }
 
       toast({ title: 'Promotion créée', description: "La promotion a été ajoutée." });
       setFormData({ label: '', year: '' });

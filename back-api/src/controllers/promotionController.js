@@ -48,7 +48,7 @@ const remove = async (req, res) => {
 
 const getStudents = async (req, res) => {
   try {
-    const students = await User.find({ promotion: req.params.id });
+    const students = await User.find({ promotion: req.params.id, role: 'etudiant' });
     res.json(students);
   } catch (err) {
     console.error(err);

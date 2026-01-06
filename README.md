@@ -87,6 +87,11 @@ db.promotions.find().pretty()
   - `npm run db:schema` – applique schémas et index MongoDB
   - `npm test` – lance les tests d’intégration
 
-## Notes
+## Noteshttps://prod.liveshare.vsengsaas.visualstudio.com/join?5BA8D188F1593A8F5254CFD169B8B92CA9E0%
 - Le front utilise `import.meta.env.VITE_API_BASE` pour l’adresse de l’API.
 - L’API nécessite MongoDB en local et un `JWT_SECRET` défini dans `.env`.
+
+
+npm run dev -- --port 5174
+
+juliettesounouvou@MacBook-Air-de-Juliette novo % cd /Users/juliettesounouvou/novo/back-api && npm run dev

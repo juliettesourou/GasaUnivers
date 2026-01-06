@@ -17,11 +17,12 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await apiLogin(email.trim(), password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const res = await apiLogin(normalizedEmail, password);
       // save token
       if (res.token) localStorage.setItem('token', res.token);
       const user = res.user || { id: res.id, name: res.name, role: res.role };
-      login(user.name || email, user.role || 'etudiant');
+      login(user.name || normalizedEmail, user.role || 'etudiant');
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error', err);

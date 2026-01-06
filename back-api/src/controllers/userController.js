@@ -14,12 +14,13 @@ const createUser = async (req, res) => {
   try {
     const bcrypt = require('bcrypt');
     const { name, email, password, role, phone, promotion } = req.body;
-    if (!email || !password || !name) return res.status(400).json({ message: 'Missing fields' });
-    const existing = await User.findOne({ email });
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    if (!normalizedEmail || !password || !name) return res.status(400).json({ message: 'Missing fields' });
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) return res.status(400).json({ message: 'Email already in use' });
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-    const user = await User.create({ name, email, password: hash, role, phone, promotion });
+    const user = await User.create({ name, email: normalizedEmail, password: hash, role, phone, promotion });
     res.status(201).json(user);
   } catch (err) {
     console.error(err);

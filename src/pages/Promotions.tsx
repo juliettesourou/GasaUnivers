@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Users, BookOpen, Plus } from 'lucide-react';
 import { getAllPromotions, getAllUsers } from '@/lib/db';
 import { getPromotions as apiGetPromotions, getStudentsByPromotion as apiGetStudentsByPromotion } from '@/lib/api';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import type { Promotion } from '@/lib/db';
 import PromotionModal from '@/components/modals/PromotionModal';
 import StudentModal from '@/components/modals/StudentModal';
@@ -19,7 +19,7 @@ export const Promotions: React.FC = () => {
   const [selectedPromotion, setSelectedPromotion] = useState<{ id: string; label?: string } | null>(null);
   const [isCredentialsOpen, setIsCredentialsOpen] = useState(false);
   const [hasRecentCredentials, setHasRecentCredentials] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const loadPromotions = async () => {
     try {

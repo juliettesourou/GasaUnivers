@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import PedagogicalSpaceModal from '@/components/modals/PedagogicalSpaceModal';
+import { getAllPedagogicalSpaces, getAllPromotions, getAllUsers } from '@/lib/db';
+import { getPromotions as apiGetPromotions, getUsers as apiGetUsers } from '@/lib/api';
+import type { Promotion, User } from '@/lib/db';
 
 interface Space {
   id: string;
@@ -24,23 +28,102 @@ interface Space {
   formateur: string;
   promotion: string;
   students: number;
+  studentId?: string;
 }
-
-const mockSpaces: Space[] = [
-  { id: '1', name: 'Programmation Web', formateur: 'Prof. Martin', promotion: '2023', students: 45 },
-  { id: '2', name: 'Base de données', formateur: 'Dr. Laurent', promotion: '2023', students: 38 },
-  { id: '3', name: 'Algorithmique', formateur: 'Prof. Dubois', promotion: '2024', students: 42 },
-  { id: '4', name: 'Gestion de projet', formateur: 'Mme. Bernard', promotion: '2024', students: 40 },
-];
 
 export const PedagogicalSpaces: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [spaces] = useState<Space[]>(mockSpaces);
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
 
-  const filteredSpaces = spaces.filter(space =>
-    space.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    space.formateur.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  async function loadSpaces() {
+    try {
+      const items = await getAllPedagogicalSpaces();
+      setSpaces(items as unknown as Space[]);
+    } catch (e) {
+      console.error('Failed to load spaces', e);
+    }
+  }
+
+  async function loadRefs() {
+    try {
+      // Essayer API d'abord
+      let apiUsers: any[] | null = null;
+      let apiPromos: any[] | null = null;
+      try {
+        const usr = await apiGetUsers();
+        apiUsers = Array.isArray(usr) ? usr : null;
+      } catch { apiUsers = null; }
+      try {
+        const promos = await apiGetPromotions();
+        apiPromos = Array.isArray(promos) ? promos : null;
+      } catch { apiPromos = null; }
+
+      // Normaliser id/_id depuis API
+      const normalizedApiUsers: User[] = (apiUsers ?? []).map((u: any) => ({
+        id: String(u._id ?? u.id ?? ''),
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        status: (u.status ?? 'active') as User['status'],
+        createdOn: u.createdOn ?? new Date().toLocaleDateString('fr-FR'),
+        phone: u.phone,
+        promotion: u.promotion,
+      })).filter((u: User) => !!u.id);
+
+      const normalizedApiPromos: Promotion[] = (apiPromos ?? []).map((p: any) => ({
+        id: String(p._id ?? p.id ?? ''),
+        year: String(p.year ?? ''),
+        label: p.label,
+        students: Number(p.students ?? 0),
+        spaces: Number(p.spaces ?? 0),
+      })).filter((p: Promotion) => !!p.id);
+
+      // Fusion avec IndexedDB
+      const [localUsers, localPromos] = await Promise.all([getAllUsers(), getAllPromotions()]);
+      const mergeById = <T extends { id: string }>(a: T[], b: T[]) => {
+        const map = new Map<string, T>();
+        for (const item of [...a, ...b]) { map.set(item.id, item); }
+        return Array.from(map.values());
+      };
+
+      setUsers(mergeById(normalizedApiUsers, localUsers));
+      setPromotions(mergeById(normalizedApiPromos, localPromos));
+    } catch (e) {
+      console.error('Failed to load refs', e);
+    }
+  }
+
+  useEffect(() => {
+    loadSpaces();
+    loadRefs();
+  }, []);
+
+  const nameByUserId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const u of users) map.set(u.id, u.name);
+    return map;
+  }, [users]);
+
+  const labelByPromotionId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of promotions) map.set(p.id, p.label ?? `Promotion ${p.year}`);
+    return map;
+  }, [promotions]);
+
+  const filteredSpaces = spaces.filter(space => {
+    const studentName = space.studentId ? (nameByUserId.get(space.studentId) || '') : '';
+    const promoLabel = labelByPromotionId.get(space.promotion) || '';
+    const q = searchQuery.toLowerCase();
+    return (
+      space.name.toLowerCase().includes(q) ||
+      space.formateur.toLowerCase().includes(q) ||
+      studentName.toLowerCase().includes(q) ||
+      promoLabel.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="space-y-8">
@@ -54,6 +137,7 @@ export const PedagogicalSpaces: React.FC = () => {
           </p>
         </div>
         <Button 
+          onClick={() => setOpenModal(true)}
           className="bg-primary text-primary-foreground hover:bg-secondary hover:text-secondary-foreground"
         >
           <Plus className="w-5 h-5 mr-2" strokeWidth={1.5} />
@@ -83,7 +167,7 @@ export const PedagogicalSpaces: React.FC = () => {
                 <TableHead className="text-foreground">Matière</TableHead>
                 <TableHead className="text-foreground">Formateur</TableHead>
                 <TableHead className="text-foreground">Promotion</TableHead>
-                <TableHead className="text-foreground">Étudiants</TableHead>
+                <TableHead className="text-foreground">Étudiant</TableHead>
                 <TableHead className="text-foreground text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -92,8 +176,8 @@ export const PedagogicalSpaces: React.FC = () => {
                 <TableRow key={space.id}>
                   <TableCell className="font-medium text-foreground">{space.name}</TableCell>
                   <TableCell className="text-foreground">{space.formateur}</TableCell>
-                  <TableCell className="text-gray-600">{space.promotion}</TableCell>
-                  <TableCell className="text-gray-600">{space.students}</TableCell>
+                  <TableCell className="text-gray-600">{labelByPromotionId.get(space.promotion) || space.promotion}</TableCell>
+                  <TableCell className="text-gray-600">{space.studentId ? (nameByUserId.get(space.studentId) || space.studentId) : space.students}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -127,6 +211,12 @@ export const PedagogicalSpaces: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <PedagogicalSpaceModal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        onCreated={() => loadSpaces()}
+      />
     </div>
   );
 };
