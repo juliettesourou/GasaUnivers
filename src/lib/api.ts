@@ -1,12 +1,30 @@
 // Use nullish coalescing so empty string "" is respected (same-origin + Nginx proxy)
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:5000';
 
-async function request(path: string, opts: RequestInit = {}) {
+// Ajoute un timeout par défaut pour éviter les attentes longues si le backend n'est pas disponible
+const DEFAULT_TIMEOUT_MS = 3500;
+
+async function request(path: string, opts: RequestInit = {}, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
   const url = `${API_BASE}${path}`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem('token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(url, { headers, ...opts });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.max(1000, timeoutMs));
+  let res: Response;
+  try {
+    res = await fetch(url, { headers, signal: controller.signal, ...opts });
+  } catch (err: any) {
+    clearTimeout(timeout);
+    // En cas de timeout ou réseau indisponible, propage une erreur contrôlée
+    const isAbort = err?.name === 'AbortError';
+    const e: any = new Error(isAbort ? 'API timeout' : 'API network error');
+    e.cause = err;
+    e.status = 0;
+    throw e;
+  }
+  clearTimeout(timeout);
   if (!res.ok) {
     const text = await res.text();
     let body = text;
@@ -40,7 +58,12 @@ export async function getPromotions() {
 }
 
 export async function createPromotion(payload: { label: string; year: number }) {
-  return request('/api/promotions', { method: 'POST', body: JSON.stringify(payload) });
+  // Adapter pour le nouveau champ academicYear (string)
+  const body = {
+    label: payload.label,
+    academicYear: typeof (payload as any).academicYear !== 'undefined' ? (payload as any).academicYear : String(payload.year)
+  };
+  return request('/api/promotions', { method: 'POST', body: JSON.stringify(body) });
 }
 
 export async function getStudentsByPromotion(promotionId: string) {

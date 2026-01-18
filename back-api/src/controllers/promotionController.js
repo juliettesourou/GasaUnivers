@@ -24,8 +24,17 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { label, year } = req.body;
-    const p = await Promotion.create({ label, year });
+    const { label } = req.body;
+    // Accepte academicYear ou retro-compatibilité avec year
+    let academicYear = req.body.academicYear;
+    if (!academicYear && req.body.year) {
+      // si year était un nombre simple, on le convertit en string
+      academicYear = String(req.body.year);
+    }
+    if (!academicYear) {
+      return res.status(400).json({ message: 'academicYear is required (format YYYY-YYYY)' });
+    }
+    const p = await Promotion.create({ label, academicYear });
     res.status(201).json(p);
   } catch (err) {
     console.error(err);
