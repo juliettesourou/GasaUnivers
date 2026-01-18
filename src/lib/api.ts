@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+// Use nullish coalescing so empty string "" is respected (same-origin + Nginx proxy)
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:5000';
 
 async function request(path: string, opts: RequestInit = {}) {
   const url = `${API_BASE}${path}`;

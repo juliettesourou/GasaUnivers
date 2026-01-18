@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         <div className="p-8 flex items-center justify-between">
           {isOpen && (
             <h1 className="font-heading font-bold text-xl ">
-              Université Gasa
+              DevCore
             </h1>
           )}
           <Button

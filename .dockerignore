@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+yarn-error.log
+.git
+**/*.map
+.vite
+vite.pid
+back-api
+# Ignore local build outputs
+/dist

@@ -1,4 +1,4 @@
-# GasaUnivers – Résumé & démarrage
+# DevCore – Résumé & démarrage
 
 Projet full‑stack pour la gestion universitaire:
 - Frontend: React + TypeScript (Vite)
@@ -70,3 +70,16 @@ npm i
 git fetch --all --prune
 
 git branch -a
+
+
+
+# Construire et lancer les services:
+docker compose build
+docker compose up -d
+
+
+# Arrêt:
+
+docker compose down
+
+#
